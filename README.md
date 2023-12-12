@@ -1,4 +1,6 @@
-# Keyboard Ackermann manual controller for Autoware
+# keybard_ackermann_controller
+
+A keyboard-based manual controller for Ackermann model vehicle
 
 2023-12-13 H.Miyagi (hideyasu.miyagi.ni@futu-re.co.jp)
 
@@ -10,10 +12,10 @@ Also the program is expected to work like 'teleop_keyboard' for a vehicle with A
 ## Usage
 
 ~~~
-$ ros2 node list
+$ ros2 node list   # To check if the simulator is alive
   (you should see /AWSIM)
 
-$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller
+$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller   # Run this controller
 ~~~
 
 Operation Keys
