@@ -4,8 +4,8 @@
 
 ## Abstract
 
-This node allows user to manually move virtual vehicle in AWSIM simulator.
-The program is expected to work like 'teleop_keyboard' for a vehicle with Ackermann model
+This program allows users to manually move a virtual vehicle in autoware-compatible simulators such as AWSIM.
+Also the program is expected to work like 'teleop_keyboard' for a vehicle with Ackermann model.
 
 ## Usage
 
