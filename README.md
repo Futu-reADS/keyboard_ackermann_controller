@@ -12,10 +12,13 @@ Also the program is expected to work like 'teleop_keyboard' for a vehicle with A
 ## Usage
 
 ~~~
+# run AWSIM (either on local PC or on remote PC)
+
 $ ros2 node list   # To check if the simulator is alive
   (you should see /AWSIM)
 
 $ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller   # Run this controller
+
 ~~~
 
 Operation Keys
@@ -28,12 +31,15 @@ Operation Keys
 
   ^ ^ ^
   | | |
-  | | +--- decrease steer angle (steer to the right)
+  | | +--- "decrease" steer angle (rotate steering wheel to the right)
   | +----- set steer angle to 0
-  +------- increase steer angle (steer to the left)
+  +------- "increase" steer angle (rotate steering wheel to the left)
 
 ~~~~
 
-`Ctlr-C` to stop the node.
+Press `Ctrl-C` to stop.
+
+[END OF TEXT]
+
 
 

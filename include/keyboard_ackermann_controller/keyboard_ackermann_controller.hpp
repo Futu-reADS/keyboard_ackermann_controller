@@ -59,9 +59,16 @@ private:
 
   // ControlCommand Parameter
   double velocity_gain_;
+  double velocity_ratio_;
   double max_forward_velocity_;
   double max_backward_velocity_;
   double backward_accel_ratio_;
+
+  double accel_gain_wrt_velocity_diff_;
+
+  double velocity_step_;
+  double steer_step_;
+  double max_steer_;
 
   // CallbackGroups
   rclcpp::CallbackGroup::SharedPtr callback_group_subscribers_;

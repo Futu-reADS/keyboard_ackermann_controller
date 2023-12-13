@@ -142,7 +142,6 @@ void AutowareKBAckControllerNode::enableKBRawMode()
 
   struct termios termio_raw = termio_org_;
   termio_raw.c_iflag &= ~(ICRNL | INPCK | ISTRIP | IXON);
-  termio_raw.c_oflag &= ~(OPOST);
   termio_raw.c_cflag |= (CS8);
   termio_raw.c_lflag &= ~(ECHO | ICANON | IEXTEN);
   termio_raw.c_cc[VMIN] = 0;
@@ -170,49 +169,64 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
     return;
   }
   //RCLCPP_INFO(get_logger(), "pollKey() returned '%c'.", c);
+
+  // Change linear velocity
   switch (c) {
-  case 'u':
-  case 'i':
-  case 'o':
-    kb_accum_state_.lonvel_ += 0.1;
-    //kb_accum_state_.accel_ = 0.1;
+  case 'u': case 'i':  case 'o':
+    kb_accum_state_.lonvel_ += velocity_step_;
+    if (max_forward_velocity_ < velocity_ratio_*kb_accum_state_.lonvel_) {
+      kb_accum_state_.lonvel_ = max_forward_velocity_/velocity_ratio_;
+    }
+    kb_accum_state_.brake_ = 0.0;
     break;
   case 'j': case 'k': case 'l':
-    if (0.2 <= kb_accum_state_.lonvel_) {
-      kb_accum_state_.lonvel_ -= 0.2;
-    } else if (kb_accum_state_.lonvel_ <= -0.2) {
-      kb_accum_state_.lonvel_ += 0.2;
+    if (velocity_step_ <= kb_accum_state_.lonvel_) {
+      kb_accum_state_.lonvel_ -= velocity_step_;
+    } else if (kb_accum_state_.lonvel_ <= -velocity_step_) {
+      kb_accum_state_.lonvel_ += velocity_step_;
     } else {
       kb_accum_state_.lonvel_ = 0;
     }
-    kb_accum_state_.brake_ = 0.2;
+    kb_accum_state_.brake_ = velocity_step_;
     break;
   case 'm': case ',': case '.':
-    kb_accum_state_.lonvel_ -= 0.1;
+    kb_accum_state_.lonvel_ -= velocity_step_;
+    if (velocity_ratio_*kb_accum_state_.lonvel_ < -max_forward_velocity_) {
+      kb_accum_state_.lonvel_ = -max_forward_velocity_/velocity_ratio_;
+    }
     kb_accum_state_.brake_ = 0.0;
     break;
   }
+
+  // Change steering angle
   switch (c) {
   case 'u': case 'j': case 'm':
-    kb_accum_state_.steer_ += 0.1;
-    if (1.0 < kb_accum_state_.steer_) {
-      kb_accum_state_.steer_ = 1.0;
+    kb_accum_state_.steer_ += steer_step_;
+    if (max_steer_ < steer_ratio_*kb_accum_state_.steer_) {
+      kb_accum_state_.steer_ = max_steer_/steer_ratio_;
     }
     break;
   case 'i': case 'k': case ',':
-    kb_accum_state_.steer_ = 0.0;
+    if (steer_step_ <= kb_accum_state_.steer_) {
+      kb_accum_state_.steer_ -= steer_step_;
+    } else if (kb_accum_state_.steer_ <= -steer_step_) {
+      kb_accum_state_.steer_ += steer_step_;
+    } else {
+      kb_accum_state_.steer_ = 0.0;
+    }
     break;
   case 'o': case 'l': case '.':
-    kb_accum_state_.steer_ += -0.1;
-    if (kb_accum_state_.steer_ < -1.0) {
-      kb_accum_state_.steer_ = -1.0;
+    kb_accum_state_.steer_ += -steer_step_;
+    if (steer_ratio_*kb_accum_state_.steer_ < -max_steer_) {
+      kb_accum_state_.steer_ = -max_steer_/steer_ratio_;
     }
     break;
   }
-  //RCLCPP_INFO(get_logger(), "accel_:%lf brake_:%lf steer_:%lf",
-  //kb_accum_state_.accel_,
-  //kb_accum_state_.brake_,
-  //kb_accum_state_.steer_);
+
+  // Display current set points
+  RCLCPP_INFO(get_logger(), "velocity:%lf steering angle:%lf",
+	      velocity_ratio_ * kb_accum_state_.lonvel_,
+	      steer_ratio_ * kb_accum_state_.steer_);
 #else
   last_joy_received_time_ = msg->header.stamp;
   if (joy_type_ == "G29") {
@@ -318,7 +332,29 @@ bool AutowareKBAckControllerNode::isDataReady()
 
 void AutowareKBAckControllerNode::onTimer()
 {
-  //RCLCPP_INFO(get_logger(), "onTimer() is called.");
+  static bool first = true;
+  if (first) {
+    RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), " ---- keyboard_ackermann_controller ---- ");
+    RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), "u i o   <--- increase forward speed (or decrease backward speed)");
+    RCLCPP_INFO(get_logger(), "j k l   <--- make target speed closer to 0");
+    RCLCPP_INFO(get_logger(), "m , .   <--- increase backward speed (or decrease forward speed)");
+    RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), "^ ^ ^");
+    RCLCPP_INFO(get_logger(), "  | | |");
+    RCLCPP_INFO(get_logger(), "  | | +--- 'decrease' steer angle (rotate steering wheel to the right)");
+    RCLCPP_INFO(get_logger(), "  | +----- set steer angle to 0");
+    RCLCPP_INFO(get_logger(), "  +------- 'increase' steer angle (rotate steering wheel to the left)");
+    RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), "Press Ctrl-C to quit.");
+    RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), " --------------------------------------- ");
+    RCLCPP_INFO(get_logger(), " ");
+    first = false;
+  }
+
   procKey();
   if (!isDataReady()) {
     return;
@@ -337,11 +373,12 @@ void AutowareKBAckControllerNode::publishControlCommand()
 #if 1
     cmd.lateral.steering_tire_angle = steer_ratio_ * kb_accum_state_.steer_;
     cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
-    cmd.longitudinal.speed = kb_accum_state_.lonvel_;
+    cmd.longitudinal.speed = velocity_ratio_ * kb_accum_state_.lonvel_;
+    cmd.longitudinal.speed =
+      std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
     cmd.longitudinal.acceleration =
-      (kb_accum_state_.lonvel_ - velocity_report_->longitudinal_velocity) * 0.1;
-      cmd.longitudinal.speed =
-        std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
+      accel_gain_wrt_velocity_diff_ *
+      (cmd.longitudinal.speed - velocity_report_->longitudinal_velocity);
 #else
     cmd.lateral.steering_tire_angle = steer_ratio_ * joy_->steer();
     cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
@@ -575,10 +612,16 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
   accel_sensitivity_ = declare_parameter<double>("accel_sensitivity", 1.0);
   brake_sensitivity_ = declare_parameter<double>("brake_sensitivity", 1.0);
   velocity_gain_ = declare_parameter<double>("control_command.velocity_gain", 3.0);
+  velocity_ratio_ = declare_parameter<double>("control_command.velocity_ratio", 1.0);
   max_forward_velocity_ = declare_parameter<double>("control_command.max_forward_velocity", 20.0);
   max_backward_velocity_ = declare_parameter<double>("control_command.max_backward_velocity", 3.0);
   backward_accel_ratio_ = declare_parameter<double>("control_command.backward_accel_ratio", 1.0);
+  accel_gain_wrt_velocity_diff_ = declare_parameter<double>("accel_gain_wrt_velocity_diff", 1.0);
 
+  velocity_step_ = declare_parameter<double>("control_command.velocity_step", 0.1);
+  steer_step_ = declare_parameter<double>("control_command.steer_step", 0.05);
+  max_steer_ = declare_parameter<double>("control_command.max_steer", 1.0);
+  
   // Callback Groups
   callback_group_subscribers_ =
     this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
