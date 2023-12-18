@@ -348,7 +348,7 @@ void AutowareKBAckControllerNode::onTimer()
     RCLCPP_INFO(get_logger(), " ");
     RCLCPP_INFO(get_logger(), " ");
     RCLCPP_INFO(get_logger(), "  i     <--- increase forward speed (or decrease backward speed)");
-    RCLCPP_INFO(get_logger(), "j   l
+    RCLCPP_INFO(get_logger(), "j   l");
     RCLCPP_INFO(get_logger(), "  ,     <--- increase backward speed (or decrease forward speed)");
     RCLCPP_INFO(get_logger(), " ");
     RCLCPP_INFO(get_logger(), "^   ^");
