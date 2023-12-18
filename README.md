@@ -35,7 +35,7 @@ Operation Keys
 
 ~~~
     i     <--- increase forward speed (or decrease backward speed)
-  j k l   <--- 'k' to stop altogether
+  j   l
     ,     <--- increase backward speed (or decrease forward speed)
 
   ^   ^
