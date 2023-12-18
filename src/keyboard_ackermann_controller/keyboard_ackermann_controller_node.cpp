@@ -579,7 +579,7 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
     flg_termio_org_set_(false)
 {
   // Parameter
-  update_rate_ = declare_parameter<double>("update_rate", 10.0);
+  update_rate_ = declare_parameter<double>("update_rate", 20.0);
   accel_ratio_ = declare_parameter<double>("accel_ratio", 3.0);
   brake_ratio_ = declare_parameter<double>("brake_ratio", 5.0);
   steer_ratio_ = declare_parameter<double>("steer_ratio", 0.5);
