@@ -303,6 +303,7 @@ bool AutowareKBAckControllerNode::isDataReady()
 #endif
 
   // Twist
+#if 0  /* temporarily disabled 20231218 */
   {
     if (!steering_report_ || ! velocity_report_) {
       RCLCPP_WARN_THROTTLE(
@@ -327,6 +328,7 @@ bool AutowareKBAckControllerNode::isDataReady()
       return false;
     }
   }
+#endif
   return true;
 }
 
