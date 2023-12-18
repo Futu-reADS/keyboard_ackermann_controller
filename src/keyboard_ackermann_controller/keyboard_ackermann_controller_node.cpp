@@ -172,14 +172,14 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
 
   // Change linear velocity
   switch (c) {
-  case 'u': case 'i':  case 'o':
+  case 'i': // case 'u': case 'i':  case 'o':
     kb_accum_state_.lonvel_ += velocity_step_;
     if (max_forward_velocity_ < velocity_ratio_*kb_accum_state_.lonvel_) {
       kb_accum_state_.lonvel_ = max_forward_velocity_/velocity_ratio_;
     }
     kb_accum_state_.brake_ = 0.0;
     break;
-  case 'j': case 'k': case 'l':
+  case '0': // case 'j': case 'k': case 'l':
     if (velocity_step_ <= kb_accum_state_.lonvel_) {
       kb_accum_state_.lonvel_ -= velocity_step_;
     } else if (kb_accum_state_.lonvel_ <= -velocity_step_) {
@@ -189,7 +189,7 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
     }
     kb_accum_state_.brake_ = velocity_step_;
     break;
-  case 'm': case ',': case '.':
+  case ',': // case 'm': case ',': case '.':
     kb_accum_state_.lonvel_ -= velocity_step_;
     if (velocity_ratio_*kb_accum_state_.lonvel_ < -max_forward_velocity_) {
       kb_accum_state_.lonvel_ = -max_forward_velocity_/velocity_ratio_;
@@ -200,13 +200,13 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
 
   // Change steering angle
   switch (c) {
-  case 'u': case 'j': case 'm':
+  case 'j': // case 'u': case 'j': case 'm':
     kb_accum_state_.steer_ += steer_step_;
     if (max_steer_ < steer_ratio_*kb_accum_state_.steer_) {
       kb_accum_state_.steer_ = max_steer_/steer_ratio_;
     }
     break;
-  case 'i': case 'k': case ',':
+  case '0': // case 'i': case 'k': case ',':
     if (steer_step_ <= kb_accum_state_.steer_) {
       kb_accum_state_.steer_ -= steer_step_;
     } else if (kb_accum_state_.steer_ <= -steer_step_) {
@@ -215,7 +215,7 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
       kb_accum_state_.steer_ = 0.0;
     }
     break;
-  case 'o': case 'l': case '.':
+  case 'l': // case 'o': case 'l': case '.':
     kb_accum_state_.steer_ += -steer_step_;
     if (steer_ratio_*kb_accum_state_.steer_ < -max_steer_) {
       kb_accum_state_.steer_ = -max_steer_/steer_ratio_;
