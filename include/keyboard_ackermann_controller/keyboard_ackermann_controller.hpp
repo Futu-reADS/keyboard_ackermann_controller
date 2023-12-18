@@ -70,6 +70,8 @@ private:
   double steer_step_;
   double max_steer_;
 
+  bool use_report_;
+
   // CallbackGroups
   rclcpp::CallbackGroup::SharedPtr callback_group_subscribers_;
   rclcpp::CallbackGroup::SharedPtr callback_group_services_;

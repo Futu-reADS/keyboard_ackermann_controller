@@ -1,4 +1,4 @@
-# keybard_ackermann_controller
+g# keybard_ackermann_controller
 
 A keyboard-based manual controller for Ackermann model vehicle
 
@@ -17,23 +17,33 @@ Also the program is expected to work like 'teleop_keyboard' for a vehicle with A
 $ ros2 node list   # To check if the simulator is alive
   (you should see /AWSIM)
 
-$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller   # Run this controller
+# Run this controller 
+$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller --ros-args -p "use_report:=yes" -p "use_sim_time:=true"
 
 ~~~
+# run on real machine (IFB board)
+
+$ ros2 node list   # To check if the simulator is alive
+  (you should see node controlling IFB board)
+
+# Run this controller
+$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller
+
 
 Operation Keys
 --------------
 
 ~~~
-  u i o   <--- increase forward speed (or decrease backward speed)
-  j k l   <--- make target speed closer to 0
-  m , .   <--- increase backward speed (or decrease forward speed)
+    i     <--- increase forward speed (or decrease backward speed)
+  j   l
+    ,     <--- increase backward speed (or decrease forward speed)
 
-  ^ ^ ^
-  | | |
-  | | +--- "decrease" steer angle (rotate steering wheel to the right)
-  | +----- set steer angle to 0
+  ^   ^
+  |   |
+  |   +--- "decrease" steer angle (rotate steering wheel to the right)
+  | 
   +------- "increase" steer angle (rotate steering wheel to the left)
+
 
 ~~~~
 
