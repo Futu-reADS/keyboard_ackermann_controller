@@ -347,15 +347,15 @@ void AutowareKBAckControllerNode::onTimer()
     RCLCPP_INFO(get_logger(), " ---- keyboard_ackermann_controller ---- ");
     RCLCPP_INFO(get_logger(), " ");
     RCLCPP_INFO(get_logger(), " ");
-    RCLCPP_INFO(get_logger(), "u i o   <--- increase forward speed (or decrease backward speed)");
-    RCLCPP_INFO(get_logger(), "j k l   <--- make target speed closer to 0");
-    RCLCPP_INFO(get_logger(), "m , .   <--- increase backward speed (or decrease forward speed)");
+    RCLCPP_INFO(get_logger(), "  i     <--- increase forward speed (or decrease backward speed)");
+    RCLCPP_INFO(get_logger(), "j   l
+    RCLCPP_INFO(get_logger(), "  ,     <--- increase backward speed (or decrease forward speed)");
     RCLCPP_INFO(get_logger(), " ");
-    RCLCPP_INFO(get_logger(), "^ ^ ^");
-    RCLCPP_INFO(get_logger(), "  | | |");
-    RCLCPP_INFO(get_logger(), "  | | +--- 'decrease' steer angle (rotate steering wheel to the right)");
-    RCLCPP_INFO(get_logger(), "  | +----- set steer angle to 0");
-    RCLCPP_INFO(get_logger(), "  +------- 'increase' steer angle (rotate steering wheel to the left)");
+    RCLCPP_INFO(get_logger(), "^   ^");
+    RCLCPP_INFO(get_logger(), "|   |");
+    RCLCPP_INFO(get_logger(), "|   +--- 'decrease' steer angle (rotate steering wheel to the right)");
+    RCLCPP_INFO(get_logger(), "|");
+    RCLCPP_INFO(get_logger(), "+------- 'increase' steer angle (rotate steering wheel to the left)");
     RCLCPP_INFO(get_logger(), " ");
     RCLCPP_INFO(get_logger(), "Press Ctrl-C to quit.");
     RCLCPP_INFO(get_logger(), " ");
