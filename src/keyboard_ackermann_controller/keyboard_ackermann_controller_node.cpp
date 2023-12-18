@@ -370,41 +370,14 @@ void AutowareKBAckControllerNode::publishControlCommand()
   autoware_auto_control_msgs::msg::AckermannControlCommand cmd;
   cmd.stamp = this->now();
   {
-#if 1
     cmd.lateral.steering_tire_angle = steer_ratio_ * kb_accum_state_.steer_;
     cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
     cmd.longitudinal.speed = velocity_ratio_ * kb_accum_state_.lonvel_;
     cmd.longitudinal.speed =
       std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
-    cmd.longitudinal.acceleration =
+    cmd.longitudinal.acceleration = 0; /*
       accel_gain_wrt_velocity_diff_ *
-      (cmd.longitudinal.speed - velocity_report_->longitudinal_velocity);
-#else
-    cmd.lateral.steering_tire_angle = steer_ratio_ * joy_->steer();
-    cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
-
-    if (joy_->accel()) {
-      cmd.longitudinal.acceleration = accel_ratio_ * joy_->accel();
-      cmd.longitudinal.speed =
-        twist_->twist.linear.x + velocity_gain_ * cmd.longitudinal.acceleration;
-      cmd.longitudinal.speed =
-        std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
-    }
-
-    if (joy_->brake()) {
-      cmd.longitudinal.speed = 0.0;
-      cmd.longitudinal.acceleration = -brake_ratio_ * joy_->brake();
-    }
-
-    // Backward
-    if (jy_->accel() && joy_->brake()) {
-      cmd.longitudinal.acceleration = backward_accel_ratio_ * joy_->accel();
-      cmd.longitudinal.speed =
-        twist_->twist.linear.x - velocity_gain_ * cmd.longitudinal.acceleration;
-      cmd.longitudinal.speed =
-        std::max(cmd.longitudinal.speed, static_cast<float>(-max_backward_velocity_));
-    }
-#endif
+      (cmd.longitudinal.speed - velocity_report_->longitudinal_velocity); */
   }
 
   pub_control_command_->publish(cmd);
