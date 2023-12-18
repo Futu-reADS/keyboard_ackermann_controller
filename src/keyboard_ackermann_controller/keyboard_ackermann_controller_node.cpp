@@ -152,11 +152,18 @@ void AutowareKBAckControllerNode::enableKBRawMode()
   
 int AutowareKBAckControllerNode::pollKey()
 {
-  char c;
+  char c = 0;
+#if 1
+  while (read(STDIN_FILENO, &c, 1) > 0) {
+    ;
+  }
+  return c;
+#else
   if (read(STDIN_FILENO, &c, 1) > 0) {
     return c;
   }
   return 0;
+#endif
 }
 
 void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::ConstSharedPtr msg)
