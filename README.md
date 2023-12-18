@@ -1,4 +1,4 @@
-g# keybard_ackermann_controller
+# keybard_ackermann_controller
 
 A keyboard-based manual controller for Ackermann model vehicle
 
