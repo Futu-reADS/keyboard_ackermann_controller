@@ -1,4 +1,4 @@
-g# keybard_ackermann_controller
+# keybard_ackermann_controller
 
 A keyboard-based manual controller for Ackermann model vehicle
 
@@ -11,6 +11,8 @@ Also the program is expected to work like 'teleop_keyboard' for a vehicle with A
 
 ## Usage
 
+### run with AWSIM
+
 ~~~
 # run AWSIM (either on local PC or on remote PC)
 
@@ -21,6 +23,10 @@ $ ros2 node list   # To check if the simulator is alive
 $ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller --ros-args -p "use_report:=yes" -p "use_sim_time:=true"
 
 ~~~
+
+### run with bare IFB board
+
+~~~
 # run on real machine (IFB board)
 
 $ ros2 node list   # To check if the simulator is alive
@@ -28,6 +34,9 @@ $ ros2 node list   # To check if the simulator is alive
 
 # Run this controller
 $ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller
+
+~~~
+
 
 
 Operation Keys
