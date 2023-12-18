@@ -186,7 +186,7 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
     }
     kb_accum_state_.brake_ = 0.0;
     break;
-  case '0': // case 'j': case 'k': case 'l':
+  case 'k': // case 'j': case 'k': case 'l':
     if (velocity_step_ <= kb_accum_state_.lonvel_) {
       kb_accum_state_.lonvel_ -= velocity_step_;
     } else if (kb_accum_state_.lonvel_ <= -velocity_step_) {
@@ -213,7 +213,7 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
       kb_accum_state_.steer_ = max_steer_/steer_ratio_;
     }
     break;
-  case '0': // case 'i': case 'k': case ',':
+  case 'k': // case 'i': case 'k': case ',':
     if (steer_step_ <= kb_accum_state_.steer_) {
       kb_accum_state_.steer_ -= steer_step_;
     } else if (kb_accum_state_.steer_ <= -steer_step_) {
@@ -310,7 +310,7 @@ bool AutowareKBAckControllerNode::isDataReady()
 #endif
 
   // Twist
-#if 0  /* temporarily disabled 20231218 */
+  if (use_report_)  /* temporarily disabled for default 20231218 */
   {
     if (!steering_report_ || ! velocity_report_) {
       RCLCPP_WARN_THROTTLE(
@@ -335,7 +335,7 @@ bool AutowareKBAckControllerNode::isDataReady()
       return false;
     }
   }
-#endif
+
   return true;
 }
 
@@ -384,9 +384,15 @@ void AutowareKBAckControllerNode::publishControlCommand()
     cmd.longitudinal.speed = velocity_ratio_ * kb_accum_state_.lonvel_;
     cmd.longitudinal.speed =
       std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
-    cmd.longitudinal.acceleration = 0; /*
+    if (use_report_) {
+      cmd.longitudinal.acceleration = 
+	accel_gain_wrt_velocity_diff_ *
+	(cmd.longitudinal.speed - velocity_report_->longitudinal_velocity);
+    } else {
+      cmd.longitudinal.acceleration = 0; /*
       accel_gain_wrt_velocity_diff_ *
       (cmd.longitudinal.speed - velocity_report_->longitudinal_velocity); */
+    }
   }
 
   pub_control_command_->publish(cmd);
@@ -603,6 +609,9 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
   velocity_step_ = declare_parameter<double>("control_command.velocity_step", 0.1);
   steer_step_ = declare_parameter<double>("control_command.steer_step", 0.05);
   max_steer_ = declare_parameter<double>("control_command.max_steer", 1.0);
+
+  use_report_ = declare_parameter<bool>("use_report", false);
+  RCLCPP_INFO(get_logger(), "use_report:%d", use_report_);
   
   // Callback Groups
   callback_group_subscribers_ =
