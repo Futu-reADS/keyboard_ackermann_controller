@@ -55,6 +55,7 @@ public:
 private:
   // Parameter
   //std::string joy_type_;
+  bool use_gear_;
   double update_rate_;
   double accel_ratio_;
   double brake_ratio_;

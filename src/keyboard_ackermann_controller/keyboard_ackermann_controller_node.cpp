@@ -91,6 +91,9 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
     }
     kb_accum_state_.brake_ = 0.0;
     break;
+  case ' ':
+    kb_accum_state_.lonvel_ = 0;
+    break;
   }
 
   // Change steering angle
@@ -209,6 +212,7 @@ void AutowareKBAckControllerNode::onTimer()
     RCLCPP_INFO(get_logger(), "|");
     RCLCPP_INFO(get_logger(), "+------- 'increase' steer angle (rotate steering wheel to the left)");
     RCLCPP_INFO(get_logger(), " ");
+    RCLCPP_INFO(get_logger(), "Press space bar to stop the vehicle.");
     RCLCPP_INFO(get_logger(), "Press Ctrl-C to quit.");
     RCLCPP_INFO(get_logger(), " ");
     RCLCPP_INFO(get_logger(), " --------------------------------------- ");
@@ -226,26 +230,34 @@ void AutowareKBAckControllerNode::onTimer()
 
 void AutowareKBAckControllerNode::publishControlCommand()
 {
-  autoware_auto_control_msgs::msg::AckermannControlCommand cmd;
-  cmd.stamp = this->now();
+  autoware_auto_control_msgs::msg::AckermannControlCommand control_cmd;
+  control_cmd.stamp = this->now();
   {
-    cmd.lateral.steering_tire_angle = steer_ratio_ * kb_accum_state_.steer_;
-    cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
-    cmd.longitudinal.speed = velocity_ratio_ * kb_accum_state_.lonvel_;
-    cmd.longitudinal.speed = std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
-    if (use_report_) {
-      cmd.longitudinal.acceleration = 
-	accel_gain_wrt_velocity_diff_ *
-	(cmd.longitudinal.speed - velocity_report_->longitudinal_velocity);
+    control_cmd.lateral.steering_tire_angle = steer_ratio_ * kb_accum_state_.steer_;
+    control_cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
+    control_cmd.longitudinal.speed = velocity_ratio_ * abs(kb_accum_state_.lonvel_);
+    double longitudinal_speed = velocity_ratio_ * kb_accum_state_.lonvel_;
+    longitudinal_speed = std::min(std::max(control_cmd.longitudinal.speed, -static_cast<float>(max_forward_velocity_)), static_cast<float>(max_forward_velocity_));
+    if (use_gear_) {
+      control_cmd.longitudinal.speed = fabs(longitudinal_speed);
     } else {
-      cmd.longitudinal.acceleration = 0; /*
+      control_cmd.longitudinal.speed = longitudinal_speed;
+    }
+    if (use_report_) {
+      if (use_gear_) {
+        control_cmd.longitudinal.acceleration = accel_gain_wrt_velocity_diff_ * (control_cmd.longitudinal.speed - fabs(velocity_report_->longitudinal_velocity));
+      } else {
+        control_cmd.longitudinal.acceleration = accel_gain_wrt_velocity_diff_ * (control_cmd.longitudinal.speed - velocity_report_->longitudinal_velocity);
+      }
+    } else {
+      control_cmd.longitudinal.acceleration = 0; /*
       accel_gain_wrt_velocity_diff_ *
-      (cmd.longitudinal.speed - velocity_report_->longitudinal_velocity); */
+      (control_cmd.longitudinal.speed - velocity_report_->longitudinal_velocity); */
     }
   }
 
-  pub_control_command_->publish(cmd);
-  prev_control_command_ = cmd;
+  pub_control_command_->publish(control_cmd);
+  prev_control_command_ = control_cmd;
 }
 
 
@@ -258,10 +270,18 @@ void AutowareKBAckControllerNode::publishMiscTopics()
   pub_emergency_cmd_->publish(emergency_cmd);
 #endif
 
-  autoware_auto_vehicle_msgs::msg::GearCommand gear_cmd;
-  gear_cmd.stamp = now();
-  gear_cmd.command = 2;
-  pub_gear_cmd_->publish(gear_cmd);
+  if (use_gear_) {
+    autoware_auto_vehicle_msgs::msg::GearCommand gear_cmd;
+    gear_cmd.stamp = now();
+    if (kb_accum_state_.lonvel_ < 0.0) {
+      gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::REVERSE;
+    } else if (kb_accum_state_.lonvel_ == 0.0) {
+      gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::PARK;
+    } else {
+      gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::DRIVE;
+    }
+    pub_gear_cmd_->publish(gear_cmd);
+  }
 
   autoware_auto_vehicle_msgs::msg::HazardLightsCommand hazard_lights_cmd;
   hazard_lights_cmd.stamp = now();
@@ -291,6 +311,7 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
 {
   
   // Parameter
+  use_gear_ = declare_parameter<double>("use_gear", false);
   update_rate_ = declare_parameter<double>("update_rate", 20.0);
   accel_ratio_ = declare_parameter<double>("accel_ratio", 3.0);
   brake_ratio_ = declare_parameter<double>("brake_ratio", 5.0);

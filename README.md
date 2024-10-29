@@ -20,9 +20,14 @@ $ ros2 node list   # To check if the simulator is alive
   (you should see /AWSIM)
 
 # Run this controller 
-$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller --ros-args -p "use_report:=yes" -p "use_sim_time:=true"
+$ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller --ros-args -p "use_report:=yes" -p "use_sim_time:=true" -p "use_gear:=true"
 
 ~~~
+
+#### Use of gear
+
+Currently AWSIM uses `/control/command/gear_cmd` to control whether the vehicle move forward or backward, which the real vehicle uses the sign of longitudinal speed in
+`/control/command/control_cmd`. To enable use of gear, set the variable `use_gear` as `true`.
 
 ### run with bare IFB board
 
@@ -55,8 +60,8 @@ Operation Keys
 
 
 ~~~~
-
-Press `Ctrl-C` to stop.
+Press space bar to stop the vehicle.
+Press `Ctrl-C` to quit from the program.
 
 [END OF TEXT]
 
