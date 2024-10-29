@@ -9,113 +9,9 @@ extern "C" {
 
 namespace keyboard_ackermann_controller
 {
-using GearShift = tier4_external_api_msgs::msg::GearShift;
-using TurnSignal = tier4_external_api_msgs::msg::TurnSignal;
-using GateMode = tier4_control_msgs::msg::GateMode;
-
-GearShiftType getUpperShift(const GearShiftType & shift)
-{
-  if (shift == GearShift::NONE) {
-    return GearShift::PARKING;
-  }
-  if (shift == GearShift::PARKING) {
-    return GearShift::REVERSE;
-  }
-  if (shift == GearShift::REVERSE) {
-    return GearShift::NEUTRAL;
-  }
-  if (shift == GearShift::NEUTRAL) {
-    return GearShift::DRIVE;
-  }
-  if (shift == GearShift::DRIVE) {
-    return GearShift::LOW;
-  }
-  if (shift == GearShift::LOW) {
-    return GearShift::LOW;
-  }
-
-  return GearShift::NONE;
-}
-
-GearShiftType getLowerShift(const GearShiftType & shift)
-{
-  if (shift == GearShift::NONE) {
-    return GearShift::PARKING;
-  }
-  if (shift == GearShift::PARKING) {
-    return GearShift::PARKING;
-  }
-  if (shift == GearShift::REVERSE) {
-    return GearShift::PARKING;
-  }
-  if (shift == GearShift::NEUTRAL) {
-    return GearShift::REVERSE;
-  }
-  if (shift == GearShift::DRIVE) {
-    return GearShift::NEUTRAL;
-  }
-  if (shift == GearShift::LOW) {
-    return GearShift::DRIVE;
-  }
-
-  return GearShift::NONE;
-}
-
-const char * getShiftName(const GearShiftType & shift)
-{
-  if (shift == GearShift::NONE) {
-    return "NONE";
-  }
-  if (shift == GearShift::PARKING) {
-    return "PARKING";
-  }
-  if (shift == GearShift::REVERSE) {
-    return "REVERSE";
-  }
-  if (shift == GearShift::NEUTRAL) {
-    return "NEUTRAL";
-  }
-  if (shift == GearShift::DRIVE) {
-    return "DRIVE";
-  }
-  if (shift == GearShift::LOW) {
-    return "LOW";
-  }
-
-  return "NOT_SUPPORTED";
-}
-
-const char * getTurnSignalName(const TurnSignalType & turn_signal)
-{
-  if (turn_signal == TurnSignal::NONE) {
-    return "NONE";
-  }
-  if (turn_signal == TurnSignal::LEFT) {
-    return "LEFT";
-  }
-  if (turn_signal == TurnSignal::RIGHT) {
-    return "RIGHT";
-  }
-  if (turn_signal == TurnSignal::HAZARD) {
-    return "HAZARD";
-  }
-
-  return "NOT_SUPPORTED";
-}
-
-const char * getGateModeName(const GateModeType & gate_mode)
-{
-  using tier4_control_msgs::msg::GateMode;
-
-  if (gate_mode == GateMode::AUTO) {
-    return "AUTO";
-  }
-  if (gate_mode == GateMode::EXTERNAL) {
-    return "EXTERNAL";
-  }
-
-  return "NOT_SUPPORTED";
-}
+  //using GearShift = tier4_external_api_msgs::msg::GearShift;
+  //using TurnSignal = tier4_external_api_msgs::msg::TurnSignal;
+  //using GateMode = tier4_control_msgs::msg::GateMode;
 
 double calcMapping(const double input, const double sensitivity)
 {
@@ -153,22 +49,14 @@ void AutowareKBAckControllerNode::enableKBRawMode()
 int AutowareKBAckControllerNode::pollKey()
 {
   char c = 0;
-#if 1
   while (read(STDIN_FILENO, &c, 1) > 0) {
     ;
   }
   return c;
-#else
-  if (read(STDIN_FILENO, &c, 1) > 0) {
-    return c;
-  }
-  return 0;
-#endif
 }
 
 void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::ConstSharedPtr msg)
 {
-#if 1
   int c;
   
   c = pollKey();
@@ -234,56 +122,20 @@ void AutowareKBAckControllerNode::procKey() // const sensor_msgs::msg::Joy::Cons
   RCLCPP_INFO(get_logger(), "velocity:%lf steering angle:%lf",
 	      velocity_ratio_ * kb_accum_state_.lonvel_,
 	      steer_ratio_ * kb_accum_state_.steer_);
-#else
-  last_joy_received_time_ = msg->header.stamp;
-  if (joy_type_ == "G29") {
-    joy_ = std::make_shared<const G29JoyConverter>(*msg);
-  } else if (joy_type_ == "DS4") {
-    joy_ = std::make_shared<const DS4JoyConverter>(*msg);
-  } else {
-    joy_ = std::make_shared<const P65JoyConverter>(*msg);
-  }
-
-  if (joy_->shift_up() || joy_->shift_down() || joy_->shift_drive() || joy_->shift_reverse()) {
-    publishShift();
-  }
-
-  if (joy_->turn_signal_left() || joy_->turn_signal_right() || joy_->clear_turn_signal()) {
-    publishTurnSignal();
-  }
-
-  if (joy_->gate_mode()) {
-    publishGateMode();
-  }
-
-  if (joy_->autoware_engage() || joy_->autoware_disengage()) {
-    publishAutowareEngage();
-  }
-
-  if (joy_->vehicle_engage() || joy_->vehicle_disengage()) {
-    publishVehicleEngage();
-  }
-
-  if (joy_->emergency_stop()) {
-    sendEmergencyRequest(true);
-  }
-
-  if (joy_->clear_emergency_stop()) {
-    sendEmergencyRequest(false);
-  }
-#endif
 }
 
 void AutowareKBAckControllerNode::onVelocityReport
 (const autoware_auto_vehicle_msgs::msg::VelocityReport::ConstSharedPtr msg)
 {
   velocity_report_ = msg;
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), std::chrono::milliseconds(5000).count(), "onVelocityReport() is called");
 }
 
 void AutowareKBAckControllerNode::onSteeringReport
 (const autoware_auto_vehicle_msgs::msg::SteeringReport::ConstSharedPtr msg)
 {
   steering_report_ = msg;
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), std::chrono::milliseconds(5000).count(), "onSteeringReport() is called");
 }
 
 
@@ -312,26 +164,26 @@ bool AutowareKBAckControllerNode::isDataReady()
   // Twist
   if (use_report_)  /* temporarily disabled for default 20231218 */
   {
-    if (!steering_report_ || ! velocity_report_) {
+    if (!steering_report_ || !velocity_report_) {
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), std::chrono::milliseconds(5000).count(),
         "waiting for steering_report or velocity_report msg...");
       return false;
     }
 
-    constexpr auto timeout = 0.5;
-    auto time_diff1 = this->now() - velocity_report_->header.stamp;
-    if (time_diff1.seconds() > timeout) {
+    double timeout = 5.0;
+    double time_diff1 = now().seconds() - (double)velocity_report_->header.stamp.sec + velocity_report_->header.stamp.nanosec*1e-9;
+    if (time_diff1 > timeout) {
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), std::chrono::milliseconds(5000).count(),
-        "velocity_report  is timeout");
+        "velocity_report is expired (time diff:%lf)", time_diff1);
       return false;
     }
-    auto time_diff2 = this->now() - steering_report_->stamp;
-    if (time_diff2.seconds() > timeout) {
+    double time_diff2 = now().seconds() - (double)steering_report_->stamp.sec + steering_report_->stamp.nanosec*1e-9;
+    if (time_diff2 > timeout) {
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), std::chrono::milliseconds(5000).count(),
-        "steering_report is timeout");
+        "steering_report is expired (time diff:%lf)", time_diff2);
       return false;
     }
   }
@@ -369,9 +221,7 @@ void AutowareKBAckControllerNode::onTimer()
     return;
   }
   publishControlCommand();
-  publishExternalControlCommand();
-  publishShift();
-  publishHeartbeat();
+  publishMiscTopics();
 }
 
 void AutowareKBAckControllerNode::publishControlCommand()
@@ -382,8 +232,7 @@ void AutowareKBAckControllerNode::publishControlCommand()
     cmd.lateral.steering_tire_angle = steer_ratio_ * kb_accum_state_.steer_;
     cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
     cmd.longitudinal.speed = velocity_ratio_ * kb_accum_state_.lonvel_;
-    cmd.longitudinal.speed =
-      std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
+    cmd.longitudinal.speed = std::min(cmd.longitudinal.speed, static_cast<float>(max_forward_velocity_));
     if (use_report_) {
       cmd.longitudinal.acceleration = 
 	accel_gain_wrt_velocity_diff_ *
@@ -399,185 +248,32 @@ void AutowareKBAckControllerNode::publishControlCommand()
   prev_control_command_ = cmd;
 }
 
-void AutowareKBAckControllerNode::publishExternalControlCommand()
+
+void AutowareKBAckControllerNode::publishMiscTopics()
 {
-  tier4_external_api_msgs::msg::ControlCommandStamped cmd_stamped;
-  cmd_stamped.stamp = this->now();
-  {
-    auto & cmd = cmd_stamped.control;
-
 #if 1
-    cmd.steering_angle = steer_ratio_ * kb_accum_state_.steer_;
-    cmd.steering_angle_velocity = steering_angle_velocity_;
-    cmd.throttle =
-      accel_ratio_ * calcMapping(kb_accum_state_.accel_, accel_sensitivity_);
-    cmd.brake = brake_ratio_ * calcMapping(kb_accum_state_.brake_, brake_sensitivity_);
-#else
-    cmd.steering_angle = steer_ratio_ * joy_->steer();
-    cmd.steering_angle_velocity = steering_angle_velocity_;
-    cmd.throttle =
-      accel_ratio_ * calcMapping(static_cast<double>(joy_->accel()), accel_sensitivity_);
-    cmd.brake = brake_ratio_ * calcMapping(static_cast<double>(joy_->brake()), brake_sensitivity_);
+  tier4_vehicle_msgs::msg::VehicleEmergencyStamped emergency_cmd;
+  emergency_cmd.stamp = now();
+  emergency_cmd.emergency = false;
+  pub_emergency_cmd_->publish(emergency_cmd);
 #endif
-  }
-
-  pub_external_control_command_->publish(cmd_stamped);
-  prev_external_control_command_ = cmd_stamped.control;
-}
-
-void AutowareKBAckControllerNode::publishShift()
-{
-  tier4_external_api_msgs::msg::GearShiftStamped gear_shift;
-  gear_shift.stamp = this->now();
-#if 1
-  gear_shift.gear_shift.data = GearShift::DRIVE;
-#else
-  if (joy_->shift_up()) {
-    gear_shift.gear_shift.data = getUpperShift(prev_shift_);
-  }
-
-  if (joy_->shift_down()) {
-    gear_shift.gear_shift.data = getLowerShift(prev_shift_);
-  }
-
-  if (joy_->shift_drive()) {
-    gear_shift.gear_shift.data = GearShift::DRIVE;
-  }
-
-  if (joy_->shift_reverse()) {
-    gear_shift.gear_shift.data = GearShift::REVERSE;
-  }
-#endif
-  //  RCLCPP_INFO(get_logger(), "GearShift::%s", getShiftName(gear_shift.gear_shift.data));
-
-  pub_shift_->publish(gear_shift);
-  prev_shift_ = gear_shift.gear_shift.data;
 
   autoware_auto_vehicle_msgs::msg::GearCommand gear_cmd;
-  gear_cmd.stamp = this->now();
-  gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::DRIVE;
+  gear_cmd.stamp = now();
+  gear_cmd.command = 2;
   pub_gear_cmd_->publish(gear_cmd);
+
+  autoware_auto_vehicle_msgs::msg::HazardLightsCommand hazard_lights_cmd;
+  hazard_lights_cmd.stamp = now();
+  hazard_lights_cmd.command = 0;
+  pub_hazard_lights_cmd_->publish(hazard_lights_cmd);
+
+  autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand turn_indicators_cmd;
+  turn_indicators_cmd.stamp = now();
+  turn_indicators_cmd.command = 0;
+  pub_turn_indicators_cmd_->publish(turn_indicators_cmd);
 }
 
-void AutowareKBAckControllerNode::publishTurnSignal()
-{
-#if 0
-  tier4_external_api_msgs::msg::TurnSignalStamped turn_signal;
-  turn_signal.stamp = this->now();
-
-  if (joy_->turn_signal_left() && joy_->turn_signal_right()) {
-    turn_signal.turn_signal.data = TurnSignal::HAZARD;
-  } else if (joy_->turn_signal_left()) {
-    turn_signal.turn_signal.data = TurnSignal::LEFT;
-  } else if (joy_->turn_signal_right()) {
-    turn_signal.turn_signal.data = TurnSignal::RIGHT;
-  }
-
-  if (joy_->clear_turn_signal()) {
-    turn_signal.turn_signal.data = TurnSignal::NONE;
-  }
-
-  RCLCPP_INFO(get_logger(), "TurnSignal::%s", getTurnSignalName(turn_signal.turn_signal.data));
-
-  pub_turn_signal_->publish(turn_signal);
-#endif
-}
-
-void AutowareKBAckControllerNode::publishGateMode()
-{
-  tier4_control_msgs::msg::GateMode gate_mode;
-
-  if (prev_gate_mode_ == GateMode::AUTO) {
-    gate_mode.data = GateMode::EXTERNAL;
-  }
-
-  if (prev_gate_mode_ == GateMode::EXTERNAL) {
-    gate_mode.data = GateMode::AUTO;
-  }
-
-  RCLCPP_INFO(get_logger(), "GateMode::%s", getGateModeName(gate_mode.data));
-
-  pub_gate_mode_->publish(gate_mode);
-  prev_gate_mode_ = gate_mode.data;
-}
-
-void AutowareKBAckControllerNode::publishHeartbeat()
-{
-  tier4_external_api_msgs::msg::Heartbeat heartbeat;
-  heartbeat.stamp = this->now();
-  pub_heartbeat_->publish(heartbeat);
-}
-
-#if 0
-void AutowareKBAckControllerNode::sendEmergencyRequest(bool emergency)
-{
-  RCLCPP_INFO(get_logger(), "%s emergency stop", emergency ? "Set" : "Clear");
-
-  auto request = std::make_shared<tier4_external_api_msgs::srv::SetEmergency::Request>();
-  request->emergency = emergency;
-
-  client_emergency_stop_->async_send_request(
-    request, [this, emergency](
-               rclcpp::Client<tier4_external_api_msgs::srv::SetEmergency>::SharedFuture result) {
-      auto response = result.get();
-      if (tier4_api_utils::is_success(response->status)) {
-        RCLCPP_INFO(get_logger(), "service succeeded");
-      } else {
-        RCLCPP_WARN(get_logger(), "service failed: %s", response->status.message.c_str());
-      }
-    });
-}
-#endif
-
-void AutowareKBAckControllerNode::publishAutowareEngage()
-{
-#if 0
-  auto req = std::make_shared<tier4_external_api_msgs::srv::Engage::Request>();
-  if (joy_->autoware_engage()) {
-    req->engage = true;
-    RCLCPP_INFO(get_logger(), "Autoware Engage");
-  }
-
-  if (joy_->autoware_disengage()) {
-    req->engage = false;
-    RCLCPP_INFO(get_logger(), "Autoware Disengage");
-  }
-
-  if (!client_autoware_engage_->service_is_ready()) {
-    RCLCPP_WARN(get_logger(), "%s is unavailable", client_autoware_engage_->get_service_name());
-    return;
-  }
-
-  client_autoware_engage_->async_send_request(
-    req, [this](rclcpp::Client<tier4_external_api_msgs::srv::Engage>::SharedFuture result) {
-      RCLCPP_INFO(
-        get_logger(), "%s: %d, %s", client_autoware_engage_->get_service_name(),
-        result.get()->status.code, result.get()->status.message.c_str());
-    });
-#endif
-}
-
-void AutowareKBAckControllerNode::publishVehicleEngage()
-{
-  autoware_auto_vehicle_msgs::msg::Engage engage;
-
-#if 1
-  engage.engage = true;
-  RCLCPP_INFO(get_logger(), "Vehicle Engage");
-#else
-  if (joy_->vehicle_engage()) {
-    engage.engage = true;
-    RCLCPP_INFO(get_logger(), "Vehicle Engage");
-  }
-
-  if (joy_->vehicle_disengage()) {
-    engage.engage = false;
-    RCLCPP_INFO(get_logger(), "Vehicle Disengage");
-  }
-#endif
-  
-  pub_vehicle_engage_->publish(engage);
-}
 
 void AutowareKBAckControllerNode::initTimer(double period_s)
 {
@@ -589,8 +285,11 @@ void AutowareKBAckControllerNode::initTimer(double period_s)
 
 AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptions & node_options)
   : Node("keyboard_ackermann_controller", node_options),
+    velocity_report_(NULL),
+    steering_report_(NULL),
     flg_termio_org_set_(false)
 {
+  
   // Parameter
   update_rate_ = declare_parameter<double>("update_rate", 20.0);
   accel_ratio_ = declare_parameter<double>("accel_ratio", 3.0);
@@ -610,7 +309,7 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
   steer_step_ = declare_parameter<double>("control_command.steer_step", 0.05);
   max_steer_ = declare_parameter<double>("control_command.max_steer", 1.0);
 
-  use_report_ = declare_parameter<bool>("use_report", false);
+  use_report_ = declare_parameter<bool>("use_report", true);
   RCLCPP_INFO(get_logger(), "use_report:%d", use_report_);
   
   // Callback Groups
@@ -642,51 +341,23 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
   // Publisher
   auto qos_control_cmd = rclcpp::QoS(1);
   qos_control_cmd.transient_local();
-  pub_control_command_ =
-    this->create_publisher<autoware_auto_control_msgs::msg::AckermannControlCommand>(
-      "/control/command/control_cmd", qos_control_cmd);
-  pub_external_control_command_ =
-    this->create_publisher<tier4_external_api_msgs::msg::ControlCommandStamped>(
-      "output/external_control_command", 1);
-  pub_shift_ =
-    this->create_publisher<tier4_external_api_msgs::msg::GearShiftStamped>("output/shift", 1);
+  pub_control_command_ = create_publisher<autoware_auto_control_msgs::msg::AckermannControlCommand>("/control/command/control_cmd", qos_control_cmd);
+#ifdef USE_TIER4
+  pub_emergency_cmd_ = create_publisher<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>("/control/command/emergency_cmd", qos_control_cmd);
+#endif
 
   auto qos_gear_cmd = rclcpp::QoS(1);
   qos_gear_cmd.transient_local();
-  pub_gear_cmd_ =
-    this->create_publisher<autoware_auto_vehicle_msgs::msg::GearCommand>
-    ("/control/command/gear_cmd", qos_gear_cmd);
-
-  pub_turn_signal_ = this->create_publisher<tier4_external_api_msgs::msg::TurnSignalStamped>(
-    "output/turn_signal", 1);
-  pub_gate_mode_ = this->create_publisher<tier4_control_msgs::msg::GateMode>("output/gate_mode", 1);
-  pub_heartbeat_ =
-    this->create_publisher<tier4_external_api_msgs::msg::Heartbeat>("output/heartbeat", 1);
-  pub_vehicle_engage_ =
-    this->create_publisher<autoware_auto_vehicle_msgs::msg::Engage>("output/vehicle_engage", 1);
+  pub_gear_cmd_ = this->create_publisher<autoware_auto_vehicle_msgs::msg::GearCommand>("/control/command/gear_cmd", qos_gear_cmd);
+  pub_hazard_lights_cmd_ = create_publisher<autoware_auto_vehicle_msgs::msg::HazardLightsCommand>("/control/command/hazard_lights_cmd", qos_gear_cmd);
+  pub_turn_indicators_cmd_ = create_publisher<autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand>("/control/command/turn_indicators_cmd", qos_gear_cmd);
 
   // Service Client
-#if 1
   while (!rclcpp::ok()) {
     RCLCPP_ERROR(get_logger(), "Interrupted while waiting for service.");
     rclcpp::shutdown();
     return;
   }
-#else
-  client_emergency_stop_ = this->create_client<tier4_external_api_msgs::srv::SetEmergency>(
-  "service/emergency_stop", rmw_qos_profile_services_default, callback_group_services_);
-  while (!client_emergency_stop_->wait_for_service(std::chrono::seconds(1))) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(get_logger(), "Interrupted while waiting for service.");
-      rclcpp::shutdown();
-      return;
-    }
-    RCLCPP_INFO(get_logger(), "Waiting for emergency_stop service connection...");
-  }
-
-  client_autoware_engage_ = this->create_client<tier4_external_api_msgs::srv::Engage>(
-    "service/autoware_engage", rmw_qos_profile_services_default);
-#endif
 
   enableKBRawMode();
 
