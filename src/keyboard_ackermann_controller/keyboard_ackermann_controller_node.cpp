@@ -236,8 +236,8 @@ void AutowareKBAckControllerNode::publishControlCommand()
     control_cmd.lateral.steering_tire_angle = steer_ratio_ * kb_accum_state_.steer_;
     control_cmd.lateral.steering_tire_rotation_rate = steering_angle_velocity_;
     control_cmd.longitudinal.speed = velocity_ratio_ * abs(kb_accum_state_.lonvel_);
-    double longitudinal_speed = velocity_ratio_ * kb_accum_state_.lonvel_;
-    longitudinal_speed = std::min(std::max(control_cmd.longitudinal.speed, -static_cast<float>(max_forward_velocity_)), static_cast<float>(max_forward_velocity_));
+    float longitudinal_speed = velocity_ratio_ * kb_accum_state_.lonvel_;
+    longitudinal_speed = std::min(std::max(longitudinal_speed, -static_cast<float>(max_forward_velocity_)), static_cast<float>(max_forward_velocity_));
     if (use_gear_) {
       control_cmd.longitudinal.speed = fabs(longitudinal_speed);
     } else {
@@ -270,18 +270,16 @@ void AutowareKBAckControllerNode::publishMiscTopics()
   pub_emergency_cmd_->publish(emergency_cmd);
 #endif
 
-  if (use_gear_) {
-    autoware_auto_vehicle_msgs::msg::GearCommand gear_cmd;
-    gear_cmd.stamp = now();
-    if (kb_accum_state_.lonvel_ < 0.0) {
-      gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::REVERSE;
-    } else if (kb_accum_state_.lonvel_ == 0.0) {
-      gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::PARK;
-    } else {
-      gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::DRIVE;
-    }
-    pub_gear_cmd_->publish(gear_cmd);
+  autoware_auto_vehicle_msgs::msg::GearCommand gear_cmd;
+  gear_cmd.stamp = now();
+  if (use_gear_ && kb_accum_state_.lonvel_ < 0.0) {
+    gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::REVERSE;
+  } else if (kb_accum_state_.lonvel_ == 0.0) {
+    gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::PARK;
+  } else {
+    gear_cmd.command = autoware_auto_vehicle_msgs::msg::GearCommand::DRIVE;
   }
+  pub_gear_cmd_->publish(gear_cmd);
 
   autoware_auto_vehicle_msgs::msg::HazardLightsCommand hazard_lights_cmd;
   hazard_lights_cmd.stamp = now();
@@ -311,7 +309,7 @@ AutowareKBAckControllerNode::AutowareKBAckControllerNode(const rclcpp::NodeOptio
 {
   
   // Parameter
-  use_gear_ = declare_parameter<double>("use_gear", false);
+  use_gear_ = declare_parameter<bool>("use_gear", false);
   update_rate_ = declare_parameter<double>("update_rate", 20.0);
   accel_ratio_ = declare_parameter<double>("accel_ratio", 3.0);
   brake_ratio_ = declare_parameter<double>("brake_ratio", 5.0);
