@@ -3,6 +3,7 @@
 A keyboard-based manual controller for Ackermann model vehicle
 
 2023-12-13 H.Miyagi (hideyasu.miyagi.ni@futu-re.co.jp)
+2024-10-29 H.Miyagi modified for use with AWSIM
 
 ## Abstract
 
@@ -26,7 +27,7 @@ $ ros2 run keyboard_ackermann_controller keyboard_ackermann_controller --ros-arg
 
 #### Use of gear
 
-Currently AWSIM uses `/control/command/gear_cmd` to control whether the vehicle move forward or backward, which the real vehicle uses the sign of longitudinal speed in
+Currently AWSIM uses `/control/command/gear_cmd` to control whether the vehicle move forward or backward, while the real vehicle uses the sign of longitudinal speed in
 `/control/command/control_cmd`. To enable use of gear, set the variable `use_gear` as `true`.
 
 ### run with bare IFB board
@@ -60,8 +61,8 @@ Operation Keys
 
 
 ~~~~
-Press space bar to stop the vehicle.
-Press `Ctrl-C` to quit from the program.
+- Press space bar to stop the vehicle.
+- Press `Ctrl-C` to quit from the program.
 
 [END OF TEXT]
 
