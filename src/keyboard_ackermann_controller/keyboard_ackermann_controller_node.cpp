@@ -238,14 +238,14 @@ void AutowareKBAckControllerNode::publishControlCommand()
     control_cmd.longitudinal.speed = velocity_ratio_ * abs(kb_accum_state_.lonvel_);
     float longitudinal_speed = velocity_ratio_ * kb_accum_state_.lonvel_;
     longitudinal_speed = std::min(std::max(longitudinal_speed, -static_cast<float>(max_forward_velocity_)), static_cast<float>(max_forward_velocity_));
-    if (use_gear_) {
+    if (false /*use_gear_*/) {
       control_cmd.longitudinal.speed = fabs(longitudinal_speed);
     } else {
       control_cmd.longitudinal.speed = longitudinal_speed;
     }
     if (use_report_) {
       if (use_gear_) {
-        control_cmd.longitudinal.acceleration = accel_gain_wrt_velocity_diff_ * (control_cmd.longitudinal.speed - fabs(velocity_report_->longitudinal_velocity));
+        control_cmd.longitudinal.acceleration = accel_gain_wrt_velocity_diff_ * (fabs(control_cmd.longitudinal.speed) - fabs(velocity_report_->longitudinal_velocity));
       } else {
         control_cmd.longitudinal.acceleration = accel_gain_wrt_velocity_diff_ * (control_cmd.longitudinal.speed - velocity_report_->longitudinal_velocity);
       }
